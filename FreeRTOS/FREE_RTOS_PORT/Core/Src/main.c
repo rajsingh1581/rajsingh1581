@@ -44,7 +44,8 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+TaskHandle_t xLedTaskHandle;
+TaskHandle_t xUARTTaskHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -52,7 +53,9 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void LedTaskCode(void *pvParameters);
+void UartTaskCode(void *pvParameters);
+void delay(uint32_t delay);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -91,7 +94,13 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  //Create Led Task here
+  xTaskCreate(LedTaskCode,"LED TASK",128 ,NULL ,1 ,&xLedTaskHandle);
+  //Create UART Task here
+  xTaskCreate(UartTaskCode, "UART TASK", 128, NULL, 1, &xUARTTaskHandle);
 
+  //Now start the scheduler
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -101,8 +110,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	HAL_Delay(1000);
+	//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	//HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -229,7 +238,32 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void LedTaskCode(void *pvParameters){
+	for(;;)
+	{
+		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		delay(100);
+		//HAL_Delay(500);
+	}
+}
+void UartTaskCode(void *pvParameters){
+	for(;;)
+	{
+		HAL_UART_Transmit(&huart2, (uint8_t*)"HELLO! WORLD\r\n",15,1000);
+		delay(100);
+		//HAL_Delay(500);
+	}
+}
 
+
+void delay(uint32_t delay)
+{
+	uint32_t loop1,loop2;
+	for(loop1=0; loop1<delay;loop1++ )
+	{
+		for(loop2=0;loop2<10000;loop2++);
+	}
+}
 /* USER CODE END 4 */
 
 /**
